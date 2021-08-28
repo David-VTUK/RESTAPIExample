@@ -127,18 +127,20 @@ func deleteObject(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	key, _ := strconv.Atoi(vars["id"])
 	found := false
-
-	//TODO - loop until it finds the value and then remove. Can't do append in-loop
+	location := 0
 
 	for index := range listOfObjects {
 		if listOfObjects[index].ID == key {
 			found = true
-			listOfObjects = append(listOfObjects[:index], listOfObjects[index+1:]...)
-			json.NewEncoder(w)
+			location = index
 		}
 	}
 
-	if found == false {
+	if found == true {
+		listOfObjects = append(listOfObjects[:location], listOfObjects[location+1:]...)
+		json.NewEncoder(w).Encode("Removed")
+	} else {
+
 		w.WriteHeader(404)
 		err := json.NewEncoder(w).Encode("Could not find object")
 		if err != nil {
@@ -146,7 +148,6 @@ func deleteObject(w http.ResponseWriter, r *http.Request) {
 			log.Fatal("Error encoding JSON")
 		}
 	}
-
 }
 
 func putObject(w http.ResponseWriter, r *http.Request) {
