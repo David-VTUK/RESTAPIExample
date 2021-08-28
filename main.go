@@ -144,7 +144,6 @@ func deleteObject(w http.ResponseWriter, r *http.Request) {
 			log.Fatal("Error encoding JSON")
 		}
 	} else {
-
 		w.WriteHeader(404)
 		err := json.NewEncoder(w).Encode("Could not find object")
 		if err != nil {
