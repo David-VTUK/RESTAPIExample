@@ -82,6 +82,7 @@ func getObject(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(500)
 				log.Fatal("Error encoding JSON")
 			}
+			break
 		}
 	}
 
@@ -133,6 +134,7 @@ func deleteObject(w http.ResponseWriter, r *http.Request) {
 		if listOfObjects[index].ID == key {
 			found = true
 			location = index
+			break
 		}
 	}
 
@@ -183,6 +185,7 @@ func putObject(w http.ResponseWriter, r *http.Request) {
 					w.WriteHeader(500)
 					log.Fatal("Error encoding JSON")
 				}
+				break
 			}
 		}
 
@@ -226,6 +229,7 @@ func patchObject(w http.ResponseWriter, r *http.Request) {
 					w.WriteHeader(500)
 					log.Fatal("Error encoding JSON")
 				}
+				break
 			}
 		}
 
