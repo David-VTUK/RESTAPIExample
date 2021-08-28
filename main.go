@@ -138,7 +138,11 @@ func deleteObject(w http.ResponseWriter, r *http.Request) {
 
 	if found == true {
 		listOfObjects = append(listOfObjects[:location], listOfObjects[location+1:]...)
-		json.NewEncoder(w).Encode("Removed")
+		err := json.NewEncoder(w).Encode("Removed")
+		if err != nil {
+			w.WriteHeader(500)
+			log.Fatal("Error encoding JSON")
+		}
 	} else {
 
 		w.WriteHeader(404)
