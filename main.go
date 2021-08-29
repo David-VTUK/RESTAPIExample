@@ -10,6 +10,7 @@ import (
 	"strconv"
 )
 
+// Example object used to demonstrate backend data.
 type object struct {
 	Name  string `json:"name"`
 	ID    int    `json:"id"`
@@ -26,6 +27,7 @@ func homePage(w http.ResponseWriter, _ *http.Request) {
 	log.Info("Homepage Hit")
 }
 
+// Handle GET POST PUT PATCH DELETE methods
 func handleRequests() {
 	myRouter := mux.NewRouter().StrictSlash(true)
 	myRouter.HandleFunc("/", homePage)
@@ -35,11 +37,12 @@ func handleRequests() {
 	myRouter.HandleFunc("/object/{id}", deleteObject).Methods(http.MethodDelete)
 	myRouter.HandleFunc("/object/{id}", putObject).Methods(http.MethodPut)
 	myRouter.HandleFunc("/object/{id}", patchObject).Methods(http.MethodPatch)
-	log.Fatal(http.ListenAndServe(":10000", myRouter))
+	log.Fatal(http.ListenAndServe(":8080", myRouter))
 }
 
 func main() {
 
+	// Create some test objects
 	listOfObjects = []object{
 		{
 			Name:  "alpha",
@@ -61,6 +64,7 @@ func main() {
 	handleRequests()
 }
 
+// Return all objects
 func getAllObjects(w http.ResponseWriter, _ *http.Request) {
 	err := json.NewEncoder(w).Encode(listOfObjects)
 	if err != nil {
@@ -69,6 +73,7 @@ func getAllObjects(w http.ResponseWriter, _ *http.Request) {
 	}
 }
 
+// Return a specific object with a given ID in the URI
 func getObject(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	key, _ := strconv.Atoi(vars["id"])
@@ -79,7 +84,7 @@ func getObject(w http.ResponseWriter, r *http.Request) {
 			found = true
 			err := json.NewEncoder(w).Encode(listOfObjects[index])
 			if err != nil {
-				w.WriteHeader(500)
+				w.WriteHeader(http.StatusInternalServerError)
 				log.Fatal("Error encoding JSON")
 			}
 			break
@@ -87,15 +92,16 @@ func getObject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if found == false {
-		w.WriteHeader(404)
+		w.WriteHeader(http.StatusNotFound)
 		err := json.NewEncoder(w).Encode("Could not find object")
 		if err != nil {
-			w.WriteHeader(500)
+			w.WriteHeader(http.StatusInternalServerError)
 			log.Fatal("Error encoding JSON")
 		}
 	}
 }
 
+// POST an object
 func postObject(w http.ResponseWriter, r *http.Request) {
 
 	requestBody, _ := ioutil.ReadAll(r.Body)
@@ -104,10 +110,10 @@ func postObject(w http.ResponseWriter, r *http.Request) {
 	err := json.Unmarshal(requestBody, &newObject)
 	if err != nil {
 		log.Error("Unable to decode JSON")
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusInternalServerError)
 		err := json.NewEncoder(w).Encode("Could not unmarshal JSON, invalid request")
 		if err != nil {
-			w.WriteHeader(500)
+			w.WriteHeader(http.StatusInternalServerError)
 			log.Fatal("Error encoding JSON")
 		}
 
@@ -115,15 +121,16 @@ func postObject(w http.ResponseWriter, r *http.Request) {
 
 		listOfObjects = append(listOfObjects, newObject)
 
-		w.WriteHeader(201)
+		w.WriteHeader(http.StatusCreated)
 		err := json.NewEncoder(w).Encode(newObject)
 		if err != nil {
-			w.WriteHeader(500)
+			w.WriteHeader(http.StatusInternalServerError)
 			log.Fatal("Error encoding JSON")
 		}
 	}
 }
 
+// DELETE a specific object with a given ID
 func deleteObject(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	key, _ := strconv.Atoi(vars["id"])
@@ -142,19 +149,20 @@ func deleteObject(w http.ResponseWriter, r *http.Request) {
 		listOfObjects = append(listOfObjects[:location], listOfObjects[location+1:]...)
 		err := json.NewEncoder(w).Encode("Removed")
 		if err != nil {
-			w.WriteHeader(500)
+			w.WriteHeader(http.StatusInternalServerError)
 			log.Fatal("Error encoding JSON")
 		}
 	} else {
-		w.WriteHeader(404)
+		w.WriteHeader(http.StatusNotFound)
 		err := json.NewEncoder(w).Encode("Could not find object")
 		if err != nil {
-			w.WriteHeader(500)
+			w.WriteHeader(http.StatusInternalServerError)
 			log.Fatal("Error encoding JSON")
 		}
 	}
 }
 
+// PUT an object
 func putObject(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	key, _ := strconv.Atoi(vars["id"])
@@ -167,10 +175,10 @@ func putObject(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error("Unable to decode JSON")
 
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
 		err := json.NewEncoder(w).Encode("Could not unmarshal JSON, invalid request")
 		if err != nil {
-			w.WriteHeader(500)
+			w.WriteHeader(http.StatusInternalServerError)
 			log.Fatal("Error encoding JSON")
 		}
 
@@ -182,7 +190,7 @@ func putObject(w http.ResponseWriter, r *http.Request) {
 				listOfObjects[index] = newObject
 				err := json.NewEncoder(w).Encode(newObject)
 				if err != nil {
-					w.WriteHeader(500)
+					w.WriteHeader(http.StatusInternalServerError)
 					log.Fatal("Error encoding JSON")
 				}
 				break
@@ -190,7 +198,7 @@ func putObject(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if found == false {
-			w.WriteHeader(404)
+			w.WriteHeader(http.StatusNotFound)
 			err := json.NewEncoder(w).Encode("Could not find object")
 			if err != nil {
 				log.Fatal("Error encoding JSON")
@@ -199,6 +207,7 @@ func putObject(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// PATCH an object
 func patchObject(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	key, _ := strconv.Atoi(vars["id"])
@@ -211,10 +220,10 @@ func patchObject(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error("Unable to decode JSON")
 
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
 		err := json.NewEncoder(w).Encode("Could not unmarshal JSON, invalid request")
 		if err != nil {
-			w.WriteHeader(500)
+			w.WriteHeader(http.StatusInternalServerError)
 			log.Fatal("Error encoding JSON")
 		}
 
@@ -226,7 +235,7 @@ func patchObject(w http.ResponseWriter, r *http.Request) {
 				listOfObjects[index].merge(newObject)
 				err := json.NewEncoder(w).Encode(listOfObjects[index])
 				if err != nil {
-					w.WriteHeader(500)
+					w.WriteHeader(http.StatusInternalServerError)
 					log.Fatal("Error encoding JSON")
 				}
 				break
@@ -234,16 +243,17 @@ func patchObject(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if found == false {
-			w.WriteHeader(404)
+			w.WriteHeader(http.StatusNotFound)
 			err := json.NewEncoder(w).Encode("Could not find object")
 			if err != nil {
-				w.WriteHeader(500)
+				w.WriteHeader(http.StatusInternalServerError)
 				log.Fatal("Error encoding JSON")
 			}
 		}
 	}
 }
 
+// When patching an object, assess which values are non-nil to move over
 func (oldStruct *object) merge(newStruct object) {
 	if newStruct.ID != 0 {
 		oldStruct.ID = newStruct.ID
